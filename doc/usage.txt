@@ -1,0 +1,21 @@
+样例见附带nginx.conf
+接入规则：
+需要修改的是upstream temp中的服务器端口号以及server中定义的匹配规则
+在upstream temp语句块中写入server关键字加自己的服务器端口号，不需要http://。它们自动按顺序被标记为server0，server1等。
+ticketups的写法固定为<xml>$server0$server1$server2(以下略)</xml>
+在server体内对$server0,$server1等变量匹配规则进行定义。写法为
+set $server1 <server1>匹配规则</server1>;
+具体写法匹配规则为：
+最外层必须有<server1></server1>。
+如果匹配规则不写，则认为对任何标签内容没有要求，会对所有请求进行匹配。
+如果写了某一个标签，则对请求body中这个标签的内容与conf文件中该标签内容进行匹配。正则表达式外不需要套<![CDATA[]]>
+如果匹配规则中写了多个标签，必须所有标签全部匹配成功。
+如果需要或关系，可以写多个server+数字的标签。
+例子：
+<server0><Content>\s*</Content><MsgType>\s*</MsgType></server0><server0><Content>a</Content></server0>
+该表达式会对所有Content为连续空格，MsgType也为连续空格或Content为a的请求进行匹配。
+如果所有模式均不能匹配，转给最后一个server。
+正则表达式中使用UTF8字符需要在前面加上(*UTF8).如(*UTF8)张*
+如果某个标签没有内容，则视为对该标签内容没有要求。即<Content></Content>与不写Content标签均为对Content标签内容无要求。如果需要匹配无内容的标签，可以用<Content><!CDATA[]]></Content>
+模块不能对某个标签不存在的情况进行匹配。
+正则表达式使用pcre处理，语法可以参阅www.pcre.org/pcre.txt
