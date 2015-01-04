@@ -1,6 +1,7 @@
 How does this module work
 =========================
 
+Nginx module is like a chain. First, you need to specify the root struct ngx_http_upstream_thutuan_module in config file. Then there must be a ngx_http_upstream_thutuan_module_ctx and ngx_http_upstream_thutuan_commands struct in it, and ngx_http_upstream_thutuan_commands contains the name of the command and ngx_http_upstream_thutuan function, and this function has module init function, and so on.
 ``` C
 #include <ngx_config.h>
 #include <ngx_core.h>
@@ -251,7 +252,7 @@ static ngx_int_t ngx_http_upstream_init_thutuan_peer(
   xmlChar *key = NULL;
   int isTicket = 0;
   uhpd->hash = uhpd->peers->number - 1;
-
+//Get information from request body
   if (cur != NULL) {
     cur = cur->xmlChildrenNode;
     while (cur != NULL) {
@@ -574,7 +575,7 @@ static ngx_int_t ngx_http_upstream_init_thutuan_peer(
     for (; i < val.len; i++) {
       parameter[i] = val.data[i];
     }
-
+//Decide what server should be used
     int serverNum = 0;
     for (; serverNum < uhpd->peers->number - 1; serverNum++) {
       char *xml_name = ngx_pcalloc(r->pool, 9 * sizeof(char));
@@ -594,7 +595,7 @@ static ngx_int_t ngx_http_upstream_init_thutuan_peer(
   xmlFreeDoc(docptr);
   return NGX_OK;
 }
-
+//Does a request info match the regular pattern?
 static int does_match(char *parameter, const char *xml_name,
                       msg_info request_info, u_char *request_body_all,
                       ngx_http_request_t *r) {
@@ -617,6 +618,7 @@ static int does_match(char *parameter, const char *xml_name,
   xmlFreeDoc(docptr);
   return result;
 }
+//Does a regex match the request body?
 static int xml_match_regex(xmlDocPtr docptr, xmlNodePtr curl,
                            msg_info request_info, u_char *request_body_all,
                            ngx_http_request_t *r) {
@@ -970,11 +972,12 @@ static int xml_match_regex(xmlDocPtr docptr, xmlNodePtr curl,
   }
   return result;
 }
+//Does a string match regular pattern?
 static int str_match_regex(char *data, char *regex, u_char *request_body_all,
                            ngx_http_request_t *r) {
 
   if (data == NULL) return 0;
-
+//Resolve memory conflict
   void *(*old_pcre_malloc)(size_t);
   void (*old_pcre_free)(void *);
   old_pcre_malloc = pcre_malloc;
